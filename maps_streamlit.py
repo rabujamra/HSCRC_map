@@ -27,7 +27,7 @@ st.markdown("""
 
 # Display Title
 st.markdown('<div class="title">Maryland’s Hospital Bed Maps</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Interactive Capacity Visualizations by Region & Payer</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Interactive Capacity Visualizations by Region & County</div>', unsafe_allow_html=True)
 
 # Dropdown selector
 map_files = {
