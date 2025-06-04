@@ -31,8 +31,8 @@ st.markdown('<div class="subtitle">Interactive Capacity Visualizations by Region
 
 # Dropdown selector
 map_files = {
-    "🛏️ All Beds Map": "maryland_beds_interactive_map.html",
-    "🏥 PAC Beds Map": "maryland_pac_beds_interactive_map.html"
+    "🛏️ Acute Beds Map": "maryland_beds_interactive_map.html",
+    "🏥 Post-Acute Care (PAC) Beds Map": "maryland_pac_beds_interactive_map.html"
 }
 selected = st.selectbox("Select a Map to View:", list(map_files.keys()))
 
