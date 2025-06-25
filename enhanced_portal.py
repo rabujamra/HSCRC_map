@@ -2,6 +2,10 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 import os
+from pathlib import Path
+
+base_path = Path(__file__).parent
+xlsx_path = base_path / "MIEMSS.xlsx"
 
 # Set layout and custom styling
 st.set_page_config(
@@ -154,17 +158,20 @@ def load_hospital_data():
     """Load hospital data and calculate statistics"""
     try:
         # Load Acute Hospitals data
-        acute_df = pd.read_excel("MIEMSS.xlsx", sheet_name="Acute Hospitals")
+        #acute_df = pd.read_excel("MIEMSS.xlsx", sheet_name="Acute Hospitals")
+        acute_df = pd.read_excel(xlsx_path, sheet_name="Acute Hospitals")
         acute_df = acute_df.dropna(subset=["Hospital Name", "County"])
         
         # Load PAC Hospitals data  
-        pac_df = pd.read_excel("MIEMSS.xlsx", sheet_name="PAC Hospitals")
+        #pac_df = pd.read_excel("MIEMSS.xlsx", sheet_name="PAC Hospitals")
+        pac_df = pd.read_excel(xlsx_path, sheet_name="PAC Hospitals")
         pac_df.columns = ["Facility Name", "County", "Region", "Sum Physical Beds"]
         pac_df = pac_df.dropna(subset=["Facility Name", "County"])
         pac_df["Sum Physical Beds"] = pd.to_numeric(pac_df["Sum Physical Beds"], errors="coerce").fillna(0)
         
         # Load full data for bed information (for acute hospitals)
-        full_df = pd.read_excel("MIEMSS.xlsx", sheet_name="MIEMSS - Daily Query Data Expor")
+        #full_df = pd.read_excel("MIEMSS.xlsx", sheet_name="MIEMSS - Daily Query Data Expor")
+        full_df = pd.read_excel(xlsx_path, sheet_name="MIEMSS - Daily Query Data Expor")
         full_df.columns = full_df.columns.str.strip()
         
         return acute_df, pac_df, full_df
