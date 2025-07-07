@@ -208,26 +208,22 @@ def prepare_data_table(hospital_type, view_mode, acute_df, pac_df, full_df):
             display_df = acute_df.copy()
             display_df["Beds"] = pd.to_numeric(display_df["Num Bed"], errors="coerce").fillna(-1).astype(int)
             display_df = display_df[["Hospital Name", "Region", "Beds"]].copy()
-            # Group cleaned acute_df by Region, summing beds and counting hospitals
-            # grouped = acute_df.groupby("Region").agg(
-            #     Hospital_Count=("Hospital Name", "count"),
-            #     Total_Beds=("Num Bed", "sum")
-            # ).reset_index()
-            # display_df = grouped[["Region", "Hospital_Count", "Total_Beds"]].copy()
-            # display_df.columns = ["Region", "Number of Hospitals", "Total Beds"]
-
             
     elif hospital_type == "Post-Acute Care (PAC)":
         if view_mode == "By County":
             display_df = pac_df.copy()
             display_df.columns = ["Hospital Name", "County", "Region", "Beds"]
         else:  # By Region
-            grouped = pac_df.groupby("Region").agg(
-                Hospital_Count=("Facility Name", "count"),
-                Total_Beds=("Sum Physical Beds", "sum")
-            ).reset_index()
-            display_df = grouped[["Region", "Hospital_Count", "Total_Beds"]].copy()
-            display_df.columns = ["Region", "Number of Facilities", "Total Beds"]
+            # grouped = pac_df.groupby("Region").agg(
+            #     Hospital_Count=("Facility Name", "count"),
+            #     Total_Beds=("Sum Physical Beds", "sum")
+            # ).reset_index()
+            # display_df = grouped[["Region", "Hospital_Count", "Total_Beds"]].copy()
+            # display_df.columns = ["Region", "Number of Facilities", "Total Beds"]
+            display_df = pac_df.copy()
+            display_df["Beds"] = pd.to_numeric(display_df["Sum Physical Beds"], errors="coerce").fillna(-1).astype(int)
+            display_df = display_df[["Facility Name", "Region", "Beds"]].copy()
+            display_df.columns = ["Facility Name", "Region", "Beds"]
 
     return display_df
 
