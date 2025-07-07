@@ -161,7 +161,7 @@ def load_hospital_data():
         #acute_df = pd.read_excel("MIEMSS.xlsx", sheet_name="Acute Hospitals")
         acute_df = pd.read_excel(xlsx_path, sheet_name="Acute Hospitals")
         acute_df = acute_df.dropna(subset=["Hospital Name", "County"])
-        
+
         # Load PAC Hospitals data  
         #pac_df = pd.read_excel("MIEMSS.xlsx", sheet_name="PAC Hospitals")
         pac_df = pd.read_excel(xlsx_path, sheet_name="PAC Hospitals")
@@ -173,7 +173,7 @@ def load_hospital_data():
         #full_df = pd.read_excel("MIEMSS.xlsx", sheet_name="MIEMSS - Daily Query Data Expor")
         full_df = pd.read_excel(xlsx_path, sheet_name="MIEMSS - Daily Query Data Expor")
         full_df.columns = full_df.columns.str.strip()
-        
+
         return acute_df, pac_df, full_df
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -188,7 +188,7 @@ def calculate_stats(hospital_type, view_mode, acute_df, pac_df, full_df):
             total_hospitals = len(acute_df)
             counties_covered = len(acute_df["County"].unique())
             # For acute by county - we don't have bed data in that sheet
-            total_beds = "N/A (No bed data in county sheet)"
+            total_beds = int(acute_df["Num Bed"].sum())
         else:  # By Region
             # Use full dataset for regional acute data
             acute_full = full_df[(full_df["PAC"].isnull()) & (full_df["Region"].str.contains("Region", na=False))]
@@ -211,10 +211,10 @@ def prepare_data_table(hospital_type, view_mode, acute_df, pac_df, full_df):
         if view_mode == "By County":
             # Use Acute Hospitals sheet - leave beds column blank as requested
             display_df = acute_df.copy()
-            display_df["Beds"] = ""  # Leave blank for acute county view
+            display_df["Beds"] = pd.to_numeric(acute_df["Num Bed"], errors="coerce").fillna(-1).astype(int)
             display_df = display_df[["Hospital Name", "County", "Region", "Beds"]].copy()
             display_df.columns = ["Hospital Name", "County", "Region", "Beds"]
-            
+
         else:  # By Region
             # Use full dataset for regional view with beds
             acute_full = full_df[(full_df["PAC"].isnull()) & (full_df["Region"].str.contains("Region", na=False))]
@@ -230,7 +230,7 @@ def prepare_data_table(hospital_type, view_mode, acute_df, pac_df, full_df):
             display_df = pac_df.copy()
             display_df.columns = ["Hospital Name", "County", "Region", "Beds"]
             display_df = display_df[["Hospital Name", "Region", "Beds"]]
-    
+
     return display_df
 
 # Main header
@@ -400,11 +400,12 @@ else:  # Data View
             <h3>📋 {hospital_type} - {view_mode} Data</h3>
         </div>
     """, unsafe_allow_html=True)
-    
+
     display_df = prepare_data_table(hospital_type, view_mode, acute_df, pac_df, full_df)
-    
+
     # Display the data table with some styling
     st.markdown('<div class="data-table">', unsafe_allow_html=True)
+
     st.dataframe(
         display_df,
         use_container_width=True,
