@@ -171,7 +171,7 @@ def load_hospital_data():
         
         # Load full data for bed information (for acute hospitals)
         #full_df = pd.read_excel("MIEMSS.xlsx", sheet_name="MIEMSS - Daily Query Data Expor")
-        full_df = pd.read_excel(xlsx_path, sheet_name="MIEMSS - Daily Query Data Expor")
+        full_df = pd.read_excel(xlsx_path, sheet_name="Acute Hospitals")
         full_df.columns = full_df.columns.str.strip()
 
         return acute_df, pac_df, full_df
@@ -179,57 +179,55 @@ def load_hospital_data():
         st.error(f"Error loading data: {e}")
         return None, None, None
 
-# Function to calculate statistics based on selection
 def calculate_stats(hospital_type, view_mode, acute_df, pac_df, full_df):
     """Calculate dynamic statistics based on current selection"""
     
     if hospital_type == "Acute Care Hospitals":
-        if view_mode == "By County":
-            total_hospitals = len(acute_df)
-            counties_covered = len(acute_df["County"].unique())
-            # For acute by county - we don't have bed data in that sheet
-            total_beds = int(acute_df["Num Bed"].sum())
-        else:  # By Region
-            # Use full dataset for regional acute data
-            acute_full = full_df[(full_df["PAC"].isnull()) & (full_df["Region"].str.contains("Region", na=False))]
-            total_hospitals = len(acute_full)
-            counties_covered = "N/A"  # Regional view doesn't show counties
-            total_beds = int(acute_full["Sum Physical Beds"].sum()) if not acute_full.empty else 0
-            
+        total_hospitals = len(acute_df)
+        counties_covered = len(acute_df["County"].unique()) if view_mode == "By County" else "N/A"
+        total_beds = int(acute_df["Num Bed"].sum())
+        
     elif hospital_type == "Post-Acute Care (PAC)":
         total_hospitals = len(pac_df)
-        counties_covered = len(pac_df["County"].unique())
+        counties_covered = len(pac_df["County"].unique()) if view_mode == "By County" else "N/A"
         total_beds = int(pac_df["Sum Physical Beds"].sum())
     
     return total_hospitals, counties_covered, total_beds
 
-# Function to prepare data table
 def prepare_data_table(hospital_type, view_mode, acute_df, pac_df, full_df):
     """Prepare data for table display"""
     
     if hospital_type == "Acute Care Hospitals":
         if view_mode == "By County":
-            # Use Acute Hospitals sheet - leave beds column blank as requested
             display_df = acute_df.copy()
             display_df["Beds"] = pd.to_numeric(acute_df["Num Bed"], errors="coerce").fillna(-1).astype(int)
             display_df = display_df[["Hospital Name", "County", "Region", "Beds"]].copy()
             display_df.columns = ["Hospital Name", "County", "Region", "Beds"]
-
+        
         else:  # By Region
-            # Use full dataset for regional view with beds
-            acute_full = full_df[(full_df["PAC"].isnull()) & (full_df["Region"].str.contains("Region", na=False))]
-            display_df = acute_full[["Facility Name", "Region", "Sum Physical Beds"]].copy()
-            display_df.columns = ["Hospital Name", "Region", "Beds"]
+            display_df = acute_df.copy()
+            display_df["Beds"] = pd.to_numeric(display_df["Num Bed"], errors="coerce").fillna(-1).astype(int)
+            display_df = display_df[["Hospital Name", "Region", "Beds"]].copy()
+            # Group cleaned acute_df by Region, summing beds and counting hospitals
+            # grouped = acute_df.groupby("Region").agg(
+            #     Hospital_Count=("Hospital Name", "count"),
+            #     Total_Beds=("Num Bed", "sum")
+            # ).reset_index()
+            # display_df = grouped[["Region", "Hospital_Count", "Total_Beds"]].copy()
+            # display_df.columns = ["Region", "Number of Hospitals", "Total Beds"]
+
             
     elif hospital_type == "Post-Acute Care (PAC)":
         if view_mode == "By County":
             display_df = pac_df.copy()
             display_df.columns = ["Hospital Name", "County", "Region", "Beds"]
         else:  # By Region
-            # PAC by region
-            display_df = pac_df.copy()
-            display_df.columns = ["Hospital Name", "County", "Region", "Beds"]
-            display_df = display_df[["Hospital Name", "Region", "Beds"]]
+            grouped = pac_df.groupby("Region").agg(
+                Hospital_Count=("Facility Name", "count"),
+                Total_Beds=("Sum Physical Beds", "sum")
+            ).reset_index()
+            display_df = grouped[["Region", "Hospital_Count", "Total_Beds"]].copy()
+            display_df.columns = ["Region", "Number of Facilities", "Total Beds"]
 
     return display_df
 
@@ -264,7 +262,7 @@ with st.sidebar:
     # View mode selector
     view_mode = st.selectbox(
         "📊 Geographic View:",
-        ["By County", "By Region"],
+        ["By Region", "By County"],
         index=0
     )
     
